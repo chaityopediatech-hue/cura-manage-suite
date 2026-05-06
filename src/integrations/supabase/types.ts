@@ -22,9 +22,11 @@ export type Database = {
           id: string
           notes: string | null
           patient_id: string
+          priority: Database["public"]["Enums"]["appointment_priority"]
           reason: string | null
           scheduled_at: string
           status: Database["public"]["Enums"]["appointment_status"]
+          symptoms: string | null
           updated_at: string
         }
         Insert: {
@@ -34,9 +36,11 @@ export type Database = {
           id?: string
           notes?: string | null
           patient_id: string
+          priority?: Database["public"]["Enums"]["appointment_priority"]
           reason?: string | null
           scheduled_at: string
           status?: Database["public"]["Enums"]["appointment_status"]
+          symptoms?: string | null
           updated_at?: string
         }
         Update: {
@@ -46,9 +50,11 @@ export type Database = {
           id?: string
           notes?: string | null
           patient_id?: string
+          priority?: Database["public"]["Enums"]["appointment_priority"]
           reason?: string | null
           scheduled_at?: string
           status?: Database["public"]["Enums"]["appointment_status"]
+          symptoms?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -382,6 +388,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "doctor" | "patient"
+      appointment_priority: "emergency" | "high" | "medium" | "low"
       appointment_status:
         | "pending"
         | "confirmed"
@@ -517,6 +524,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "doctor", "patient"],
+      appointment_priority: ["emergency", "high", "medium", "low"],
       appointment_status: [
         "pending",
         "confirmed",
