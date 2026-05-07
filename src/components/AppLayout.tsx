@@ -1,16 +1,19 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
 import { useI18n, LANGS } from "@/lib/i18n";
+import { useTheme } from "@/lib/theme";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Activity, Users, Stethoscope, CalendarDays, FileText, Bot, LogOut, LayoutDashboard, Home,
+  Building2, FileUp, Sun, Moon,
 } from "lucide-react";
 import { useEffect } from "react";
 
 export function AppLayout() {
   const { user, role, loading, signOut } = useAuth();
   const { t, lang, setLang } = useI18n();
+  const { theme, toggle } = useTheme();
   const nav = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
 
@@ -28,6 +31,8 @@ export function AppLayout() {
     { to: "/patients", icon: Users, label: t("patients") },
     { to: "/appointments", icon: CalendarDays, label: t("appointments") },
     { to: "/prescriptions", icon: FileText, label: t("prescriptions") },
+    { to: "/reports", icon: FileUp, label: t("reports") },
+    ...(role === "admin" ? [{ to: "/departments", icon: Building2, label: t("departments") }] : []),
     { to: "/assistant", icon: Bot, label: t("assistant") },
   ];
 
@@ -73,6 +78,9 @@ export function AppLayout() {
                 {LANGS.map((l) => <SelectItem key={l.code} value={l.code}>{l.label}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Button variant="ghost" size="sm" onClick={toggle} title={theme === "dark" ? t("lightMode") : t("darkMode")}>
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
             <Button variant="ghost" size="sm" asChild><Link to="/"><Home className="h-4 w-4" /></Link></Button>
             <Button variant="ghost" size="sm" onClick={() => signOut().then(() => nav({ to: "/" }))}>
               <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">{t("signOut")}</span>
