@@ -28,6 +28,7 @@ type Doctor = { id: string; full_name: string; specialty: string; status: string
 type Appt = {
   id: string; doctor_id: string; patient_id: string; scheduled_at: string;
   reason: string | null; symptoms: string | null; status: Status; priority: Priority;
+  risk_score: number; follow_up_date: string | null;
   doctors?: { full_name: string; specialty: string } | null;
   patients?: { full_name: string } | null;
 };
@@ -44,7 +45,7 @@ function AppointmentsPage() {
   const [auto, setAuto] = useState(true);
   const [form, setForm] = useState({
     doctor_id: "", patient_id: "", date: "", time: "", reason: "", symptoms: "",
-    priority: "medium" as Priority,
+    priority: "medium" as Priority, follow_up_date: "",
   });
 
   const load = async () => {
@@ -91,7 +92,7 @@ function AppointmentsPage() {
       const { data } = await supabase.from("patients").select("id").eq("user_id", user.id).maybeSingle();
       if (data) defaultPatient = data.id;
     }
-    setForm({ doctor_id: "", patient_id: defaultPatient, date: "", time: "", reason: "", symptoms: "", priority: "medium" });
+    setForm({ doctor_id: "", patient_id: defaultPatient, date: "", time: "", reason: "", symptoms: "", priority: "medium", follow_up_date: "" });
     setOpen(true);
   };
 
@@ -117,6 +118,8 @@ function AppointmentsPage() {
       doctor_id: doctorId, patient_id: form.patient_id,
       scheduled_at: scheduled.toISOString(), reason: form.reason || null,
       symptoms: form.symptoms || null, priority: form.priority,
+      risk_score: triage.riskScore,
+      follow_up_date: form.follow_up_date || null,
       status: triage.emergency ? "confirmed" : "pending",
       created_by: user?.id ?? null,
     });
