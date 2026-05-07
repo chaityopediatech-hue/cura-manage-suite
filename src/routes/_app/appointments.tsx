@@ -28,6 +28,7 @@ type Doctor = { id: string; full_name: string; specialty: string; status: string
 type Appt = {
   id: string; doctor_id: string; patient_id: string; scheduled_at: string;
   reason: string | null; symptoms: string | null; status: Status; priority: Priority;
+  risk_score: number; follow_up_date: string | null;
   doctors?: { full_name: string; specialty: string } | null;
   patients?: { full_name: string } | null;
 };
@@ -44,7 +45,7 @@ function AppointmentsPage() {
   const [auto, setAuto] = useState(true);
   const [form, setForm] = useState({
     doctor_id: "", patient_id: "", date: "", time: "", reason: "", symptoms: "",
-    priority: "medium" as Priority,
+    priority: "medium" as Priority, follow_up_date: "",
   });
 
   const load = async () => {
@@ -91,7 +92,7 @@ function AppointmentsPage() {
       const { data } = await supabase.from("patients").select("id").eq("user_id", user.id).maybeSingle();
       if (data) defaultPatient = data.id;
     }
-    setForm({ doctor_id: "", patient_id: defaultPatient, date: "", time: "", reason: "", symptoms: "", priority: "medium" });
+    setForm({ doctor_id: "", patient_id: defaultPatient, date: "", time: "", reason: "", symptoms: "", priority: "medium", follow_up_date: "" });
     setOpen(true);
   };
 
@@ -117,6 +118,8 @@ function AppointmentsPage() {
       doctor_id: doctorId, patient_id: form.patient_id,
       scheduled_at: scheduled.toISOString(), reason: form.reason || null,
       symptoms: form.symptoms || null, priority: form.priority,
+      risk_score: triage.riskScore,
+      follow_up_date: form.follow_up_date || null,
       status: triage.emergency ? "confirmed" : "pending",
       created_by: user?.id ?? null,
     });
@@ -186,9 +189,14 @@ function AppointmentsPage() {
                 <Textarea rows={2} placeholder="e.g. chest pain, shortness of breath"
                   value={form.symptoms} onChange={(e) => setForm({ ...form, symptoms: e.target.value })} />
                 {form.symptoms && (
-                  <div className={`text-xs rounded-md px-2 py-1.5 ${triage.emergency ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
-                    {triage.emergency && <AlertTriangle className="inline h-3 w-3 mr-1" />}
-                    {t("triageNotice")}: {t(triage.priority)} · {t("suggestedSpecialty")}: {triage.suggestedSpecialty}
+                  <div className={`text-xs rounded-md px-2 py-1.5 space-y-1 ${triage.emergency ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
+                    <div>{triage.emergency && <AlertTriangle className="inline h-3 w-3 mr-1" />}{t("triageNotice")}: {t(triage.priority)} · {t("suggestedSpecialty")}: {triage.suggestedSpecialty}</div>
+                    <div className="flex items-center gap-2"><span className="shrink-0">{t("riskScore")}:</span>
+                      <div className="flex-1 h-1.5 rounded-full bg-background overflow-hidden">
+                        <div className={`h-full ${triage.riskScore >= 85 ? "bg-destructive" : triage.riskScore >= 40 ? "bg-warning" : "bg-success"}`} style={{ width: `${triage.riskScore}%` }} />
+                      </div>
+                      <span className="font-medium">{triage.riskScore}/100</span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -215,6 +223,7 @@ function AppointmentsPage() {
               <div className="space-y-1.5"><Label>{t("date")}</Label><Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
               <div className="space-y-1.5"><Label>{t("time")}</Label><Input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} /></div>
               <div className="space-y-1.5 col-span-2"><Label>{t("reason")}</Label><Input value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} /></div>
+              <div className="space-y-1.5 col-span-2"><Label>{t("followUp")}</Label><Input type="date" value={form.follow_up_date} onChange={(e) => setForm({ ...form, follow_up_date: e.target.value })} /></div>
               <div className="space-y-1.5 col-span-2">
                 <Label>{t("priority")}</Label>
                 <Select value={form.priority} onValueChange={(v) => setForm({ ...form, priority: v as Priority })}>

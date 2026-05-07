@@ -19,19 +19,30 @@ const SPECIALTY_HINTS: Array<{ kw: string[]; specialty: string }> = [
   { kw: ["emergency", "unconscious", "bleeding", "accident", "trauma"], specialty: "Emergency Medicine" },
 ];
 
-export function analyzeSymptoms(text: string): { priority: Priority; emergency: boolean; suggestedSpecialty: string } {
+export function analyzeSymptoms(text: string): { priority: Priority; emergency: boolean; suggestedSpecialty: string; riskScore: number } {
   const t = (text || "").toLowerCase();
   let priority: Priority = "low";
-  if (MEDIUM.some((k) => t.includes(k))) priority = "medium";
-  if (HIGH.some((k) => t.includes(k))) priority = "high";
-  const emergency = EMERGENCY.some((k) => t.includes(k));
-  if (emergency) priority = "emergency";
+  let riskScore = 10;
+  const mediumHits = MEDIUM.filter((k) => t.includes(k)).length;
+  const highHits = HIGH.filter((k) => t.includes(k)).length;
+  const emergencyHits = EMERGENCY.filter((k) => t.includes(k)).length;
+  if (mediumHits > 0) { priority = "medium"; riskScore = Math.min(50, 30 + mediumHits * 5); }
+  if (highHits > 0) { priority = "high"; riskScore = Math.min(80, 60 + highHits * 5); }
+  const emergency = emergencyHits > 0;
+  if (emergency) { priority = "emergency"; riskScore = Math.min(100, 90 + emergencyHits * 3); }
+  if (!t.trim()) riskScore = 0;
 
   let suggestedSpecialty = "General Medicine";
   for (const s of SPECIALTY_HINTS) {
     if (s.kw.some((k) => t.includes(k))) { suggestedSpecialty = s.specialty; break; }
   }
-  return { priority, emergency, suggestedSpecialty };
+  return { priority, emergency, suggestedSpecialty, riskScore };
+}
+
+export function riskBand(score: number): "low" | "medium" | "emergency" {
+  if (score >= 85) return "emergency";
+  if (score >= 40) return "medium";
+  return "low";
 }
 
 // Pick best doctor: specialty match + least workload (fewest pending/confirmed appts).
