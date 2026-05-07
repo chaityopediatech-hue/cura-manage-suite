@@ -41,12 +41,14 @@ function ReportsPage() {
   const load = async () => {
     setLoading(true);
     const [r, p] = await Promise.all([
-      supabase.from("medical_reports").select("*, patients(full_name)").order("created_at", { ascending: false }),
+      supabase.from("medical_reports").select("*").order("created_at", { ascending: false }),
       supabase.from("patients").select("id, full_name").order("full_name"),
     ]);
     if (r.error) toast.error(r.error.message);
-    setRows((r.data as Report[]) ?? []);
-    setPatients(p.data ?? []);
+    const pats = p.data ?? [];
+    const byId = Object.fromEntries(pats.map((x) => [x.id, x.full_name]));
+    setRows((r.data ?? []).map((x) => ({ ...x, patients: { full_name: byId[x.patient_id] ?? "–" } })) as Report[]);
+    setPatients(pats);
     setLoading(false);
   };
   useEffect(() => { load(); }, [user?.id]);
