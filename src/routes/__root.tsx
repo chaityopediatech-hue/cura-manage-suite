@@ -40,12 +40,14 @@ export const Route = createRootRoute({
   }),
   shellComponent: RootShell,
   component: () => (
-    <I18nProvider>
-      <AuthProvider>
-        <Outlet />
-        <Toaster />
-      </AuthProvider>
-    </I18nProvider>
+    <ThemeProvider>
+      <I18nProvider>
+        <AuthProvider>
+          <Outlet />
+          <Toaster />
+        </AuthProvider>
+      </I18nProvider>
+    </ThemeProvider>
   ),
   notFoundComponent: NotFoundComponent,
 });
