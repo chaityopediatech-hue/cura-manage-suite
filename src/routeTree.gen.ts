@@ -13,9 +13,11 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppReportsRouteImport } from './routes/_app/reports'
 import { Route as AppPrescriptionsRouteImport } from './routes/_app/prescriptions'
 import { Route as AppPatientsRouteImport } from './routes/_app/patients'
 import { Route as AppDoctorsRouteImport } from './routes/_app/doctors'
+import { Route as AppDepartmentsRouteImport } from './routes/_app/departments'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppAssistantRouteImport } from './routes/_app/assistant'
 import { Route as AppAppointmentsRouteImport } from './routes/_app/appointments'
@@ -39,6 +41,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppReportsRoute = AppReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPrescriptionsRoute = AppPrescriptionsRouteImport.update({
   id: '/prescriptions',
   path: '/prescriptions',
@@ -52,6 +59,11 @@ const AppPatientsRoute = AppPatientsRouteImport.update({
 const AppDoctorsRoute = AppDoctorsRouteImport.update({
   id: '/doctors',
   path: '/doctors',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDepartmentsRoute = AppDepartmentsRouteImport.update({
+  id: '/departments',
+  path: '/departments',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -77,9 +89,11 @@ export interface FileRoutesByFullPath {
   '/appointments': typeof AppAppointmentsRoute
   '/assistant': typeof AppAssistantRoute
   '/dashboard': typeof AppDashboardRoute
+  '/departments': typeof AppDepartmentsRoute
   '/doctors': typeof AppDoctorsRoute
   '/patients': typeof AppPatientsRoute
   '/prescriptions': typeof AppPrescriptionsRoute
+  '/reports': typeof AppReportsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -88,9 +102,11 @@ export interface FileRoutesByTo {
   '/appointments': typeof AppAppointmentsRoute
   '/assistant': typeof AppAssistantRoute
   '/dashboard': typeof AppDashboardRoute
+  '/departments': typeof AppDepartmentsRoute
   '/doctors': typeof AppDoctorsRoute
   '/patients': typeof AppPatientsRoute
   '/prescriptions': typeof AppPrescriptionsRoute
+  '/reports': typeof AppReportsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -101,9 +117,11 @@ export interface FileRoutesById {
   '/_app/appointments': typeof AppAppointmentsRoute
   '/_app/assistant': typeof AppAssistantRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/departments': typeof AppDepartmentsRoute
   '/_app/doctors': typeof AppDoctorsRoute
   '/_app/patients': typeof AppPatientsRoute
   '/_app/prescriptions': typeof AppPrescriptionsRoute
+  '/_app/reports': typeof AppReportsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -114,9 +132,11 @@ export interface FileRouteTypes {
     | '/appointments'
     | '/assistant'
     | '/dashboard'
+    | '/departments'
     | '/doctors'
     | '/patients'
     | '/prescriptions'
+    | '/reports'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -125,9 +145,11 @@ export interface FileRouteTypes {
     | '/appointments'
     | '/assistant'
     | '/dashboard'
+    | '/departments'
     | '/doctors'
     | '/patients'
     | '/prescriptions'
+    | '/reports'
   id:
     | '__root__'
     | '/'
@@ -137,9 +159,11 @@ export interface FileRouteTypes {
     | '/_app/appointments'
     | '/_app/assistant'
     | '/_app/dashboard'
+    | '/_app/departments'
     | '/_app/doctors'
     | '/_app/patients'
     | '/_app/prescriptions'
+    | '/_app/reports'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -179,6 +203,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/reports': {
+      id: '/_app/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AppReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/prescriptions': {
       id: '/_app/prescriptions'
       path: '/prescriptions'
@@ -198,6 +229,13 @@ declare module '@tanstack/react-router' {
       path: '/doctors'
       fullPath: '/doctors'
       preLoaderRoute: typeof AppDoctorsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/departments': {
+      id: '/_app/departments'
+      path: '/departments'
+      fullPath: '/departments'
+      preLoaderRoute: typeof AppDepartmentsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/dashboard': {
@@ -228,18 +266,22 @@ interface AppRouteChildren {
   AppAppointmentsRoute: typeof AppAppointmentsRoute
   AppAssistantRoute: typeof AppAssistantRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppDepartmentsRoute: typeof AppDepartmentsRoute
   AppDoctorsRoute: typeof AppDoctorsRoute
   AppPatientsRoute: typeof AppPatientsRoute
   AppPrescriptionsRoute: typeof AppPrescriptionsRoute
+  AppReportsRoute: typeof AppReportsRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAppointmentsRoute: AppAppointmentsRoute,
   AppAssistantRoute: AppAssistantRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppDepartmentsRoute: AppDepartmentsRoute,
   AppDoctorsRoute: AppDoctorsRoute,
   AppPatientsRoute: AppPatientsRoute,
   AppPrescriptionsRoute: AppPrescriptionsRoute,
+  AppReportsRoute: AppReportsRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -253,3 +295,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
