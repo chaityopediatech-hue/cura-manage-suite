@@ -19,11 +19,13 @@ export type Database = {
           created_at: string
           created_by: string | null
           doctor_id: string
+          follow_up_date: string | null
           id: string
           notes: string | null
           patient_id: string
           priority: Database["public"]["Enums"]["appointment_priority"]
           reason: string | null
+          risk_score: number
           scheduled_at: string
           status: Database["public"]["Enums"]["appointment_status"]
           symptoms: string | null
@@ -33,11 +35,13 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           doctor_id: string
+          follow_up_date?: string | null
           id?: string
           notes?: string | null
           patient_id: string
           priority?: Database["public"]["Enums"]["appointment_priority"]
           reason?: string | null
+          risk_score?: number
           scheduled_at: string
           status?: Database["public"]["Enums"]["appointment_status"]
           symptoms?: string | null
@@ -47,11 +51,13 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           doctor_id?: string
+          follow_up_date?: string | null
           id?: string
           notes?: string | null
           patient_id?: string
           priority?: Database["public"]["Enums"]["appointment_priority"]
           reason?: string | null
+          risk_score?: number
           scheduled_at?: string
           status?: Database["public"]["Enums"]["appointment_status"]
           symptoms?: string | null
@@ -104,11 +110,69 @@ export type Database = {
         }
         Relationships: []
       }
+      departments: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      diagnoses: {
+        Row: {
+          appointment_id: string | null
+          created_at: string
+          doctor_id: string
+          follow_up_date: string | null
+          id: string
+          notes: string
+          patient_id: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string
+          doctor_id: string
+          follow_up_date?: string | null
+          id?: string
+          notes: string
+          patient_id: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string
+          doctor_id?: string
+          follow_up_date?: string | null
+          id?: string
+          notes?: string
+          patient_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       doctors: {
         Row: {
           availability: string | null
           created_at: string
           department: string
+          department_id: string | null
           email: string | null
           full_name: string
           id: string
@@ -123,6 +187,7 @@ export type Database = {
           availability?: string | null
           created_at?: string
           department?: string
+          department_id?: string | null
           email?: string | null
           full_name: string
           id?: string
@@ -137,6 +202,7 @@ export type Database = {
           availability?: string | null
           created_at?: string
           department?: string
+          department_id?: string | null
           email?: string | null
           full_name?: string
           id?: string
@@ -146,6 +212,83 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctors_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medical_reports: {
+        Row: {
+          created_at: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          notes: string | null
+          patient_id: string
+          title: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          title: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          title?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      medical_timeline: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          event_type: string
+          id: string
+          occurred_at: string
+          patient_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          event_type: string
+          id?: string
+          occurred_at?: string
+          patient_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          event_type?: string
+          id?: string
+          occurred_at?: string
+          patient_id?: string
+          title?: string
         }
         Relationships: []
       }
