@@ -28,6 +28,9 @@ const dict: Record<Lang, Record<string, string>> = {
     features: "Features", featureAnalytics: "Clinic analytics dashboard", featureRx: "Digital prescriptions",
     featureAccess: "Secure access control", featureAI: "AI Assistant",
     getStarted: "Get started", learnMore: "Learn more",
+    reports: "Reports", upload: "Upload", download: "Download", departments: "Departments",
+    diagnoses: "Diagnoses", timeline: "Timeline", riskScore: "Risk score", followUp: "Follow-up",
+    theme: "Theme", lightMode: "Light", darkMode: "Dark",
   },
   es: {
     appName: "MediCore", tagline: "Gestión de clínica moderna, simple.",
