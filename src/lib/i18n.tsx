@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-type Lang = "en" | "es" | "fr" | "ar";
+type Lang = "en" | "es" | "fr" | "ar" | "bn";
 
 const dict: Record<Lang, Record<string, string>> = {
   en: {
@@ -95,6 +95,31 @@ const dict: Record<Lang, Record<string, string>> = {
     featureAccess: "تحكم وصول آمن", featureAI: "المساعد الذكي",
     getStarted: "ابدأ الآن", learnMore: "اعرف المزيد",
   },
+  bn: {
+    appName: "MediCore", tagline: "আধুনিক ক্লিনিক ব্যবস্থাপনা, সহজভাবে।",
+    signIn: "সাইন ইন", signUp: "নিবন্ধন", signOut: "সাইন আউট",
+    email: "ইমেইল", password: "পাসওয়ার্ড", fullName: "পূর্ণ নাম", phone: "ফোন",
+    dashboard: "ড্যাশবোর্ড", doctors: "ডাক্তার", patients: "রোগী",
+    appointments: "অ্যাপয়েন্টমেন্ট", prescriptions: "প্রেসক্রিপশন", assistant: "এআই সহকারী",
+    home: "হোম", language: "ভাষা", search: "অনুসন্ধান",
+    add: "যোগ করুন", edit: "সম্পাদনা", delete: "মুছুন", save: "সংরক্ষণ", cancel: "বাতিল",
+    book: "অ্যাপয়েন্টমেন্ট বুক করুন", noData: "কোনো তথ্য নেই।", loading: "লোড হচ্ছে…",
+    role: "ভূমিকা", admin: "অ্যাডমিন", doctor: "ডাক্তার", patient: "রোগী",
+    todayAppts: "আজকের অ্যাপয়েন্টমেন্ট", pendingAppts: "মুলতুবি", totalDoctors: "মোট ডাক্তার", totalPatients: "মোট রোগী",
+    quickActions: "দ্রুত কার্যক্রম", recentActivity: "সাম্প্রতিক কার্যকলাপ",
+    name: "নাম", specialty: "বিশেষজ্ঞতা", department: "বিভাগ", availability: "উপলব্ধতা", status: "অবস্থা",
+    age: "বয়স", gender: "লিঙ্গ", address: "ঠিকানা", bloodGroup: "রক্তের গ্রুপ", medicalHistory: "চিকিৎসা ইতিহাস",
+    date: "তারিখ", time: "সময়", reason: "কারণ", diagnosis: "রোগ নির্ণয়", instructions: "নির্দেশনা",
+    medicine: "ওষুধ", dosage: "ডোজ", timing: "সময়সূচি", duration: "মেয়াদ",
+    symptoms: "উপসর্গ", priority: "অগ্রাধিকার", emergency: "জরুরি", high: "উচ্চ", medium: "মাঝারি", low: "নিম্ন",
+    autoAssign: "স্বয়ংক্রিয় ডাক্তার বরাদ্দ", emergencyAlerts: "জরুরি ক্ষেত্র",
+    suggestedSpecialty: "প্রস্তাবিত বিশেষজ্ঞতা", triageNotice: "ট্রায়াজ বিশ্লেষণ",
+    aiDisclaimer: "এই এআই সহকারী শুধুমাত্র ক্লিনিক সহায়তার জন্য, পেশাদার চিকিৎসা পরামর্শের বিকল্প নয়।",
+    aiPlaceholder: "একটি ক্লিনিকাল প্রশ্ন জিজ্ঞাসা করুন…",
+    features: "বৈশিষ্ট্য", featureAnalytics: "ক্লিনিক বিশ্লেষণ ড্যাশবোর্ড", featureRx: "ডিজিটাল প্রেসক্রিপশন",
+    featureAccess: "নিরাপদ অ্যাক্সেস নিয়ন্ত্রণ", featureAI: "এআই সহকারী",
+    getStarted: "শুরু করুন", learnMore: "আরও জানুন",
+  },
 };
 
 const Ctx = createContext<{ lang: Lang; setLang: (l: Lang) => void; t: (k: string) => string }>({
@@ -127,4 +152,5 @@ export const useI18n = () => useContext(Ctx);
 export const LANGS: { code: Lang; label: string }[] = [
   { code: "en", label: "English" }, { code: "es", label: "Español" },
   { code: "fr", label: "Français" }, { code: "ar", label: "العربية" },
+  { code: "bn", label: "বাংলা" },
 ];
