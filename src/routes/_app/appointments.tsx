@@ -133,6 +133,43 @@ function AppointmentsPage() {
     if (error) toast.error(error.message); else { toast.success("Updated"); load(); }
   };
 
+  const [dxOpen, setDxOpen] = useState(false);
+  const [dxAppt, setDxAppt] = useState<Appt | null>(null);
+  const [dxForm, setDxForm] = useState({ notes: "", follow_up_date: "" });
+
+  const openDiagnose = (r: Appt) => {
+    setDxAppt(r);
+    setDxForm({ notes: "", follow_up_date: r.follow_up_date ?? "" });
+    setDxOpen(true);
+  };
+
+  const saveDiagnosis = async () => {
+    if (!dxAppt) return;
+    if (!dxForm.notes.trim()) { toast.error("Notes are required"); return; }
+    const { error: dErr } = await supabase.from("diagnoses").insert({
+      appointment_id: dxAppt.id,
+      doctor_id: dxAppt.doctor_id,
+      patient_id: dxAppt.patient_id,
+      notes: dxForm.notes,
+      follow_up_date: dxForm.follow_up_date || null,
+    });
+    if (dErr) { toast.error(dErr.message); return; }
+    await supabase.from("medical_timeline").insert({
+      patient_id: dxAppt.patient_id,
+      event_type: "diagnosis",
+      title: `Diagnosis — ${dxAppt.doctors?.full_name ?? "Doctor"}`,
+      description: dxForm.notes,
+      occurred_at: new Date().toISOString(),
+      created_by: user?.id ?? null,
+    });
+    await supabase.from("appointments").update({
+      follow_up_date: dxForm.follow_up_date || null,
+      status: "completed",
+    }).eq("id", dxAppt.id);
+    toast.success("Diagnosis saved");
+    setDxOpen(false); setDxAppt(null); load();
+  };
+
   const filtered = rows.filter((r) =>
     [r.doctors?.full_name, r.patients?.full_name, r.reason, r.symptoms].some((v) => (v ?? "").toLowerCase().includes(q.toLowerCase()))
   ).sort((a, b) => {
