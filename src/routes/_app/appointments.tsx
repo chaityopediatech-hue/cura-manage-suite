@@ -348,9 +348,12 @@ function AppointmentsPage() {
               <Input type="date" value={dxForm.follow_up_date} onChange={(e) => setDxForm({ ...dxForm, follow_up_date: e.target.value })} />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-2">
             <Button variant="outline" onClick={() => setDxOpen(false)}>{t("cancel")}</Button>
-            <Button onClick={saveDiagnosis}>{t("save")}</Button>
+            <Button variant="secondary" onClick={() => saveDiagnosis(false)}>{t("save")}</Button>
+            {(role === "admin" || role === "doctor") && (
+              <Button onClick={() => saveDiagnosis(true)}>{t("save")} & {t("prescriptions")}</Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
