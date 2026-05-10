@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -12,8 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Trash2, FileText } from "lucide-react";
 import { toast } from "sonner";
 
+type RxSearch = { diagnosis_id?: string; appointment_id?: string };
+
 export const Route = createFileRoute("/_app/prescriptions")({
   head: () => ({ meta: [{ title: "Prescriptions — MediCore" }] }),
+  validateSearch: (s: Record<string, unknown>): RxSearch => ({
+    diagnosis_id: typeof s.diagnosis_id === "string" ? s.diagnosis_id : undefined,
+    appointment_id: typeof s.appointment_id === "string" ? s.appointment_id : undefined,
+  }),
   component: PrescriptionsPage,
 });
 
