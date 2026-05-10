@@ -143,17 +143,18 @@ function AppointmentsPage() {
     setDxOpen(true);
   };
 
-  const saveDiagnosis = async () => {
+  const navigate = useNavigate();
+  const saveDiagnosis = async (andPrescribe = false) => {
     if (!dxAppt) return;
     if (!dxForm.notes.trim()) { toast.error("Notes are required"); return; }
-    const { error: dErr } = await supabase.from("diagnoses").insert({
+    const { data: dx, error: dErr } = await supabase.from("diagnoses").insert({
       appointment_id: dxAppt.id,
       doctor_id: dxAppt.doctor_id,
       patient_id: dxAppt.patient_id,
       notes: dxForm.notes,
       follow_up_date: dxForm.follow_up_date || null,
-    });
-    if (dErr) { toast.error(dErr.message); return; }
+    }).select("id").single();
+    if (dErr || !dx) { toast.error(dErr?.message ?? "Failed"); return; }
     await supabase.from("medical_timeline").insert({
       patient_id: dxAppt.patient_id,
       event_type: "diagnosis",
@@ -167,7 +168,13 @@ function AppointmentsPage() {
       status: "completed",
     }).eq("id", dxAppt.id);
     toast.success("Diagnosis saved");
-    setDxOpen(false); setDxAppt(null); load();
+    const apptId = dxAppt.id;
+    setDxOpen(false); setDxAppt(null);
+    if (andPrescribe) {
+      navigate({ to: "/prescriptions", search: { diagnosis_id: dx.id, appointment_id: apptId } });
+    } else {
+      load();
+    }
   };
 
   const filtered = rows.filter((r) =>
