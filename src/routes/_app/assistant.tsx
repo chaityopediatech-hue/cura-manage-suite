@@ -33,37 +33,39 @@ function AssistantPage() {
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
+    requestAnimationFrame(() => {
+      endRef.current?.scrollIntoView({ behavior: "smooth" });
+    });
   }, [messages]);
 
   const send = async () => {
     const text = input.trim();
     if (!text || busy) return;
 
-    const next: Msg[] = [
-      ...messages,
-      { role: "user", content: text },
-    ];
-
-    setMessages(next);
     setInput("");
     setBusy(true);
 
-    try {
-      const res = await askAI({ data: { messages: next } });
+    const userMessage: Msg = { role: "user", content: text };
 
-      setMessages([
-        ...next,
+    setMessages((prev) => [...prev, userMessage]);
+
+    try {
+      const res = await askAI({
+        data: {
+          messages: [...messages, userMessage],
+        },
+      });
+
+      setMessages((prev) => [
+        ...prev,
         { role: "assistant", content: res.reply },
       ]);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Assistant unavailable.";
-
-      setMessages([
-        ...next,
+      setMessages((prev) => [
+        ...prev,
         {
           role: "assistant",
-          content: `I do not have enough information. (${msg})`,
+          content: "I do not have enough information.",
         },
       ]);
     } finally {
