@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -12,8 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Trash2, FileText } from "lucide-react";
 import { toast } from "sonner";
 
+type RxSearch = { diagnosis_id?: string; appointment_id?: string };
+
 export const Route = createFileRoute("/_app/prescriptions")({
   head: () => ({ meta: [{ title: "Prescriptions — MediCore" }] }),
+  validateSearch: (s: Record<string, unknown>): RxSearch => ({
+    diagnosis_id: typeof s.diagnosis_id === "string" ? s.diagnosis_id : undefined,
+    appointment_id: typeof s.appointment_id === "string" ? s.appointment_id : undefined,
+  }),
   component: PrescriptionsPage,
 });
 
@@ -29,6 +35,8 @@ type RxItem = { id: string; medicine_id: string; dosage: string; timing: string;
 function PrescriptionsPage() {
   const { role, user } = useAuth();
   const { t } = useI18n();
+  const search = Route.useSearch();
+  const navigate = useNavigate();
   const [rows, setRows] = useState<Rx[]>([]);
   const [doctors, setDoctors] = useState<{ id: string; full_name: string; user_id: string | null }[]>([]);
   const [patients, setPatients] = useState<{ id: string; full_name: string }[]>([]);
@@ -38,7 +46,7 @@ function PrescriptionsPage() {
   const [view, setView] = useState<Rx | null>(null);
   const [items, setItems] = useState<RxItem[]>([]);
   const [form, setForm] = useState({
-    doctor_id: "", patient_id: "", diagnosis: "", instructions: "",
+    doctor_id: "", patient_id: "", diagnosis: "", instructions: "", appointment_id: "" as string,
     medicines: [{ medicine_id: "", dosage: "", timing: "morning", duration: "" }] as Array<{ medicine_id: string; dosage: string; timing: string; duration: string }>,
   });
 
@@ -67,10 +75,40 @@ function PrescriptionsPage() {
       const me = doctors.find((x) => x.user_id === user.id);
       if (me) did = me.id;
     }
-    setForm({ doctor_id: did, patient_id: "", diagnosis: "", instructions: "",
+    setForm({ doctor_id: did, patient_id: "", diagnosis: "", instructions: "", appointment_id: "",
       medicines: [{ medicine_id: "", dosage: "", timing: "morning", duration: "" }] });
     setOpen(true);
   };
+
+  // Prefill from a saved diagnosis when navigated with ?diagnosis_id=...
+  useEffect(() => {
+    if (!canCreate || !search.diagnosis_id) return;
+    (async () => {
+      const { data: dx } = await supabase.from("diagnoses")
+        .select("id, doctor_id, patient_id, notes, appointment_id")
+        .eq("id", search.diagnosis_id!).maybeSingle();
+      if (!dx) return;
+      let apptLine = "";
+      const apptId = dx.appointment_id ?? search.appointment_id ?? null;
+      if (apptId) {
+        const { data: appt } = await supabase.from("appointments")
+          .select("reason, symptoms, scheduled_at").eq("id", apptId).maybeSingle();
+        if (appt) {
+          apptLine = `Appointment: ${new Date(appt.scheduled_at).toLocaleString()}` +
+            (appt.reason ? ` — ${appt.reason}` : "") +
+            (appt.symptoms ? ` (symptoms: ${appt.symptoms})` : "");
+        }
+      }
+      setForm({
+        doctor_id: dx.doctor_id, patient_id: dx.patient_id,
+        diagnosis: dx.notes ?? "",
+        instructions: apptLine,
+        appointment_id: apptId ?? "",
+        medicines: [{ medicine_id: "", dosage: "", timing: "morning", duration: "" }],
+      });
+      setOpen(true);
+    })();
+  }, [search.diagnosis_id, search.appointment_id, canCreate]);
 
   const save = async () => {
     if (!form.doctor_id || !form.patient_id || !form.diagnosis.trim()) {
@@ -82,6 +120,7 @@ function PrescriptionsPage() {
     const { data: rx, error } = await supabase.from("prescriptions").insert({
       doctor_id: form.doctor_id, patient_id: form.patient_id,
       diagnosis: form.diagnosis, instructions: form.instructions || null,
+      appointment_id: form.appointment_id || null,
     }).select("id").single();
     if (error || !rx) { toast.error(error?.message ?? "Failed"); return; }
 
@@ -89,7 +128,16 @@ function PrescriptionsPage() {
       valid.map((m) => ({ prescription_id: rx.id, medicine_id: m.medicine_id, dosage: m.dosage, timing: m.timing, duration: m.duration }))
     );
     if (e2) { toast.error(e2.message); return; }
-    toast.success("Prescription saved"); setOpen(false); load();
+
+    await supabase.from("medical_timeline").insert({
+      patient_id: form.patient_id, event_type: "prescription",
+      title: "Prescription issued", description: form.diagnosis,
+      occurred_at: new Date().toISOString(), created_by: user?.id ?? null,
+    });
+
+    toast.success("Prescription saved"); setOpen(false);
+    if (search.diagnosis_id) navigate({ to: "/prescriptions", search: {} });
+    load();
   };
 
   const openView = async (r: Rx) => {
