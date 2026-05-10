@@ -2,22 +2,25 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 const Schema = z.object({
-  messages: z.array(
-    z.object({
-      role: z.enum(["user", "assistant", "system"]),
-      content: z.string().min(1).max(4000),
-    })
-  ).min(1).max(30),
+  messages: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant", "system"]),
+        content: z.string().min(1).max(4000),
+      })
+    )
+    .min(1)
+    .max(30),
 });
 
-const SYSTEM = `You are MediCore Assistant, a helpful clinical-support chatbot.
+const SYSTEM = `You are MediCore Assistant, a helpful clinical-support chatbot for a clinic management app.
 
 Rules:
-- Do NOT invent patient/doctor data.
-- If unknown, say: "I do not have enough information."
-- Give safe, educational medical info.
-- Always suggest consulting a qualified doctor.
-- Keep replies under 200 words.
+- Do NOT invent or fabricate patient, doctor, or prescription data.
+- If you don't know something, say: "I do not have enough information."
+- Give safe, educational medical information.
+- Always recommend consulting a qualified healthcare professional.
+- Keep responses under 200 words.
 `;
 
 export const askAI = createServerFn({ method: "POST" })
@@ -53,7 +56,6 @@ export const askAI = createServerFn({ method: "POST" })
 
       if (!res.ok) {
         const txt = await res.text().catch(() => "");
-
         console.error("AI error:", res.status, txt);
 
         if (res.status === 429) {
