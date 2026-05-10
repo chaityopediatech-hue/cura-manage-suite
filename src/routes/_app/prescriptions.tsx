@@ -85,18 +85,25 @@ function PrescriptionsPage() {
     if (!canCreate || !search.diagnosis_id) return;
     (async () => {
       const { data: dx } = await supabase.from("diagnoses")
-        .select("id, doctor_id, patient_id, notes, appointment_id, appointments(reason, symptoms, scheduled_at)")
+        .select("id, doctor_id, patient_id, notes, appointment_id")
         .eq("id", search.diagnosis_id!).maybeSingle();
       if (!dx) return;
-      const appt = (dx as { appointments?: { reason: string | null; symptoms: string | null; scheduled_at: string } | null }).appointments;
-      const apptLine = appt
-        ? `Appointment: ${new Date(appt.scheduled_at).toLocaleString()}${appt.reason ? ` — ${appt.reason}` : ""}${appt.symptoms ? ` (symptoms: ${appt.symptoms})` : ""}`
-        : "";
+      let apptLine = "";
+      const apptId = dx.appointment_id ?? search.appointment_id ?? null;
+      if (apptId) {
+        const { data: appt } = await supabase.from("appointments")
+          .select("reason, symptoms, scheduled_at").eq("id", apptId).maybeSingle();
+        if (appt) {
+          apptLine = `Appointment: ${new Date(appt.scheduled_at).toLocaleString()}` +
+            (appt.reason ? ` — ${appt.reason}` : "") +
+            (appt.symptoms ? ` (symptoms: ${appt.symptoms})` : "");
+        }
+      }
       setForm({
         doctor_id: dx.doctor_id, patient_id: dx.patient_id,
         diagnosis: dx.notes ?? "",
         instructions: apptLine,
-        appointment_id: dx.appointment_id ?? search.appointment_id ?? "",
+        appointment_id: apptId ?? "",
         medicines: [{ medicine_id: "", dosage: "", timing: "morning", duration: "" }],
       });
       setOpen(true);
