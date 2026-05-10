@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Search, AlertTriangle } from "lucide-react";
+import { Plus, Search, AlertTriangle, Stethoscope } from "lucide-react";
 import { toast } from "sonner";
 import { analyzeSymptoms, pickBestDoctor, type Priority } from "@/lib/triage";
 
@@ -131,6 +131,43 @@ function AppointmentsPage() {
   const setStatus = async (id: string, status: Status) => {
     const { error } = await supabase.from("appointments").update({ status }).eq("id", id);
     if (error) toast.error(error.message); else { toast.success("Updated"); load(); }
+  };
+
+  const [dxOpen, setDxOpen] = useState(false);
+  const [dxAppt, setDxAppt] = useState<Appt | null>(null);
+  const [dxForm, setDxForm] = useState({ notes: "", follow_up_date: "" });
+
+  const openDiagnose = (r: Appt) => {
+    setDxAppt(r);
+    setDxForm({ notes: "", follow_up_date: r.follow_up_date ?? "" });
+    setDxOpen(true);
+  };
+
+  const saveDiagnosis = async () => {
+    if (!dxAppt) return;
+    if (!dxForm.notes.trim()) { toast.error("Notes are required"); return; }
+    const { error: dErr } = await supabase.from("diagnoses").insert({
+      appointment_id: dxAppt.id,
+      doctor_id: dxAppt.doctor_id,
+      patient_id: dxAppt.patient_id,
+      notes: dxForm.notes,
+      follow_up_date: dxForm.follow_up_date || null,
+    });
+    if (dErr) { toast.error(dErr.message); return; }
+    await supabase.from("medical_timeline").insert({
+      patient_id: dxAppt.patient_id,
+      event_type: "diagnosis",
+      title: `Diagnosis — ${dxAppt.doctors?.full_name ?? "Doctor"}`,
+      description: dxForm.notes,
+      occurred_at: new Date().toISOString(),
+      created_by: user?.id ?? null,
+    });
+    await supabase.from("appointments").update({
+      follow_up_date: dxForm.follow_up_date || null,
+      status: "completed",
+    }).eq("id", dxAppt.id);
+    toast.success("Diagnosis saved");
+    setDxOpen(false); setDxAppt(null); load();
   };
 
   const filtered = rows.filter((r) =>
@@ -255,11 +292,12 @@ function AppointmentsPage() {
               <TableHead>{t("patient")}</TableHead>
               <TableHead>{t("reason")}</TableHead>
               <TableHead>{t("status")}</TableHead>
+              {(role === "admin" || role === "doctor") && <TableHead></TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading ? <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">{t("loading")}</TableCell></TableRow>
-              : filtered.length === 0 ? <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">{t("noData")}</TableCell></TableRow>
+            {loading ? <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">{t("loading")}</TableCell></TableRow>
+              : filtered.length === 0 ? <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">{t("noData")}</TableCell></TableRow>
               : filtered.map((r) => (
                 <TableRow key={r.id} className={r.priority === "emergency" ? "bg-destructive/5" : ""}>
                   <TableCell>{priorityBadge(r.priority)}</TableCell>
@@ -275,11 +313,40 @@ function AppointmentsPage() {
                       </Select>
                     ) : statusBadge(r.status)}
                   </TableCell>
+                  {(role === "admin" || role === "doctor") && (
+                    <TableCell>
+                      <Button variant="outline" size="sm" onClick={() => openDiagnose(r)}>
+                        <Stethoscope className="h-4 w-4" /> {t("diagnosis")}
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={dxOpen} onOpenChange={setDxOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t("diagnosis")} — {dxAppt?.patients?.full_name ?? ""}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>{t("diagnosis")} / Notes</Label>
+              <Textarea rows={5} value={dxForm.notes} onChange={(e) => setDxForm({ ...dxForm, notes: e.target.value })} placeholder="Clinical findings, diagnosis, and treatment plan…" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t("followUp")}</Label>
+              <Input type="date" value={dxForm.follow_up_date} onChange={(e) => setDxForm({ ...dxForm, follow_up_date: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDxOpen(false)}>{t("cancel")}</Button>
+            <Button onClick={saveDiagnosis}>{t("save")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
