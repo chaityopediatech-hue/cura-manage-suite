@@ -56,7 +56,10 @@ function PrescriptionsPage() {
     !!rx && (role === "admin" || (role === "doctor" && rx.doctor_id === myDoctorId));
 
   const removeRx = async (rx: Rx) => {
-    if (!canModify(rx)) return;
+    if (!canModify(rx)) {
+      toast.error("Not permitted: you can't modify this prescription");
+      return;
+    }
     if (!confirm("Delete this prescription?")) return;
     const { error } = await supabase.from("prescriptions").delete().eq("id", rx.id);
     if (error) { toast.error(error.message); return; }
