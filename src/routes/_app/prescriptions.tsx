@@ -51,6 +51,19 @@ function PrescriptionsPage() {
   });
 
   const canCreate = role === "admin" || role === "doctor";
+  const myDoctorId = role === "doctor" && user ? doctors.find((d) => d.user_id === user.id)?.id : undefined;
+  const canModify = (rx: Rx | null) =>
+    !!rx && (role === "admin" || (role === "doctor" && rx.doctor_id === myDoctorId));
+
+  const removeRx = async (rx: Rx) => {
+    if (!canModify(rx)) return;
+    if (!confirm("Delete this prescription?")) return;
+    const { error } = await supabase.from("prescriptions").delete().eq("id", rx.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Deleted");
+    setView(null);
+    load();
+  };
 
   const load = async () => {
     setLoading(true);
@@ -266,6 +279,13 @@ function PrescriptionsPage() {
                 {items.length === 0 && <div className="px-3 py-4 text-center text-muted-foreground text-sm">{t("noData")}</div>}
               </div>
             </div>
+          )}
+          {canModify(view) && (
+            <DialogFooter>
+              <Button variant="destructive" onClick={() => view && removeRx(view)}>
+                <Trash2 className="h-4 w-4" /> {t("delete") ?? "Delete"}
+              </Button>
+            </DialogFooter>
           )}
         </DialogContent>
       </Dialog>
