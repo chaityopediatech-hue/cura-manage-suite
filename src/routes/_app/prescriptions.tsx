@@ -97,6 +97,14 @@ function PrescriptionsPage() {
     setOpen(true);
   };
 
+  // Show toast & strip param when redirected from a forbidden detail/edit route
+  useEffect(() => {
+    if (search.denied) {
+      toast.error("Not permitted: you don't have access to that prescription");
+      navigate({ to: "/prescriptions", search: {} });
+    }
+  }, [search.denied, navigate]);
+
   // Prefill from a saved diagnosis when navigated with ?diagnosis_id=...
   useEffect(() => {
     if (!canCreate || !search.diagnosis_id) return;
