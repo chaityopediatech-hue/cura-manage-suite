@@ -12,13 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Trash2, FileText } from "lucide-react";
 import { toast } from "sonner";
 
-type RxSearch = { diagnosis_id?: string; appointment_id?: string };
+type RxSearch = { diagnosis_id?: string; appointment_id?: string; denied?: boolean };
 
 export const Route = createFileRoute("/_app/prescriptions")({
   head: () => ({ meta: [{ title: "Prescriptions — MediCore" }] }),
   validateSearch: (s: Record<string, unknown>): RxSearch => ({
     diagnosis_id: typeof s.diagnosis_id === "string" ? s.diagnosis_id : undefined,
     appointment_id: typeof s.appointment_id === "string" ? s.appointment_id : undefined,
+    denied: s.denied === true || s.denied === "true",
   }),
   component: PrescriptionsPage,
 });
@@ -95,6 +96,14 @@ function PrescriptionsPage() {
       medicines: [{ medicine_id: "", dosage: "", timing: "morning", duration: "" }] });
     setOpen(true);
   };
+
+  // Show toast & strip param when redirected from a forbidden detail/edit route
+  useEffect(() => {
+    if (search.denied) {
+      toast.error("Not permitted: you don't have access to that prescription");
+      navigate({ to: "/prescriptions", search: {} });
+    }
+  }, [search.denied, navigate]);
 
   // Prefill from a saved diagnosis when navigated with ?diagnosis_id=...
   useEffect(() => {

@@ -21,6 +21,7 @@ import { Route as AppDepartmentsRouteImport } from './routes/_app/departments'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppAssistantRouteImport } from './routes/_app/assistant'
 import { Route as AppAppointmentsRouteImport } from './routes/_app/appointments'
+import { Route as AppPrescriptionsIdRouteImport } from './routes/_app/prescriptions.$id'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -81,6 +82,11 @@ const AppAppointmentsRoute = AppAppointmentsRouteImport.update({
   path: '/appointments',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPrescriptionsIdRoute = AppPrescriptionsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppPrescriptionsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -92,8 +98,9 @@ export interface FileRoutesByFullPath {
   '/departments': typeof AppDepartmentsRoute
   '/doctors': typeof AppDoctorsRoute
   '/patients': typeof AppPatientsRoute
-  '/prescriptions': typeof AppPrescriptionsRoute
+  '/prescriptions': typeof AppPrescriptionsRouteWithChildren
   '/reports': typeof AppReportsRoute
+  '/prescriptions/$id': typeof AppPrescriptionsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -105,8 +112,9 @@ export interface FileRoutesByTo {
   '/departments': typeof AppDepartmentsRoute
   '/doctors': typeof AppDoctorsRoute
   '/patients': typeof AppPatientsRoute
-  '/prescriptions': typeof AppPrescriptionsRoute
+  '/prescriptions': typeof AppPrescriptionsRouteWithChildren
   '/reports': typeof AppReportsRoute
+  '/prescriptions/$id': typeof AppPrescriptionsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -120,8 +128,9 @@ export interface FileRoutesById {
   '/_app/departments': typeof AppDepartmentsRoute
   '/_app/doctors': typeof AppDoctorsRoute
   '/_app/patients': typeof AppPatientsRoute
-  '/_app/prescriptions': typeof AppPrescriptionsRoute
+  '/_app/prescriptions': typeof AppPrescriptionsRouteWithChildren
   '/_app/reports': typeof AppReportsRoute
+  '/_app/prescriptions/$id': typeof AppPrescriptionsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/patients'
     | '/prescriptions'
     | '/reports'
+    | '/prescriptions/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/patients'
     | '/prescriptions'
     | '/reports'
+    | '/prescriptions/$id'
   id:
     | '__root__'
     | '/'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/_app/patients'
     | '/_app/prescriptions'
     | '/_app/reports'
+    | '/_app/prescriptions/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -259,8 +271,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppointmentsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/prescriptions/$id': {
+      id: '/_app/prescriptions/$id'
+      path: '/$id'
+      fullPath: '/prescriptions/$id'
+      preLoaderRoute: typeof AppPrescriptionsIdRouteImport
+      parentRoute: typeof AppPrescriptionsRoute
+    }
   }
 }
+
+interface AppPrescriptionsRouteChildren {
+  AppPrescriptionsIdRoute: typeof AppPrescriptionsIdRoute
+}
+
+const AppPrescriptionsRouteChildren: AppPrescriptionsRouteChildren = {
+  AppPrescriptionsIdRoute: AppPrescriptionsIdRoute,
+}
+
+const AppPrescriptionsRouteWithChildren =
+  AppPrescriptionsRoute._addFileChildren(AppPrescriptionsRouteChildren)
 
 interface AppRouteChildren {
   AppAppointmentsRoute: typeof AppAppointmentsRoute
@@ -269,7 +299,7 @@ interface AppRouteChildren {
   AppDepartmentsRoute: typeof AppDepartmentsRoute
   AppDoctorsRoute: typeof AppDoctorsRoute
   AppPatientsRoute: typeof AppPatientsRoute
-  AppPrescriptionsRoute: typeof AppPrescriptionsRoute
+  AppPrescriptionsRoute: typeof AppPrescriptionsRouteWithChildren
   AppReportsRoute: typeof AppReportsRoute
 }
 
@@ -280,7 +310,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDepartmentsRoute: AppDepartmentsRoute,
   AppDoctorsRoute: AppDoctorsRoute,
   AppPatientsRoute: AppPatientsRoute,
-  AppPrescriptionsRoute: AppPrescriptionsRoute,
+  AppPrescriptionsRoute: AppPrescriptionsRouteWithChildren,
   AppReportsRoute: AppReportsRoute,
 }
 
