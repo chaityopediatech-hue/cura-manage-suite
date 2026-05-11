@@ -280,6 +280,13 @@ function PrescriptionsPage() {
               </div>
             </div>
           )}
+          {canModify(view) && (
+            <DialogFooter>
+              <Button variant="destructive" onClick={() => view && removeRx(view)}>
+                <Trash2 className="h-4 w-4" /> {t("delete") ?? "Delete"}
+              </Button>
+            </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
     </div>
