@@ -51,6 +51,19 @@ function PrescriptionsPage() {
   });
 
   const canCreate = role === "admin" || role === "doctor";
+  const myDoctorId = role === "doctor" && user ? doctors.find((d) => d.user_id === user.id)?.id : undefined;
+  const canModify = (rx: Rx | null) =>
+    !!rx && (role === "admin" || (role === "doctor" && rx.doctor_id === myDoctorId));
+
+  const removeRx = async (rx: Rx) => {
+    if (!canModify(rx)) return;
+    if (!confirm("Delete this prescription?")) return;
+    const { error } = await supabase.from("prescriptions").delete().eq("id", rx.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Deleted");
+    setView(null);
+    load();
+  };
 
   const load = async () => {
     setLoading(true);
