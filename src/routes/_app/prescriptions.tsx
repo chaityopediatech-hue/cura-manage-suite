@@ -260,7 +260,16 @@ function PrescriptionsPage() {
 
       <Dialog open={!!view} onOpenChange={(o) => !o && setView(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{t("prescriptions")}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {t("prescriptions")}
+              {view && !canModify(view) && (
+                <span className="text-xs font-normal px-2 py-0.5 rounded-full bg-muted text-muted-foreground border">
+                  Read-only
+                </span>
+              )}
+            </DialogTitle>
+          </DialogHeader>
           {view && (
             <div className="space-y-3 text-sm">
               <div><span className="text-muted-foreground">{t("patient")}:</span> {view.patients?.full_name}</div>
